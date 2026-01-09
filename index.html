@@ -23,6 +23,8 @@
 
     <label for="heatmapUrl"><strong>Heatmap GeoJSON URL:</strong></label>
     <input type="text" id="heatmapUrl" placeholder="https://example.com/data.json" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow_depth_low_res.geojson">
+    <label for="heatmapIntensityPropertyName"><strong>Heatmap Intensity Property Name:</strong></label>
+    <input type="text" id="heatmapIntensityPropertyName" placeholder="depth_mm" value="depth_mm">    
     <button onclick="loadData()">Add Layer</button>
   </div>
   
@@ -64,6 +66,11 @@
 
     async function loadData() {
         const url = document.getElementById("heatmapUrl").value.trim();
+        const propName = document.getElementById("heatmapIntensityPropertyName").value.trim();
+        if (!propName) {
+            error("Missing intensity property name");
+            return;
+        }
 
         if (heatLayer) {
             map.removeLayer(heatLayer);
@@ -73,22 +80,26 @@
             info("Loading " + url);
             const response = await fetch(url);
             const geojson = await response.json();
-            info("Loaded " + geojson.features.length + " features");
+
+            const vals = geojson.features.map(f => f.properties[propName]);
+            const max = vals.reduce((a, b) => Math.max(a, b));
+            const min = vals.reduce((a, b) => Math.min(a, b));
+            const mean = vals.reduce((a, b) => a + b) / vals.length;
+            info("Loaded " + geojson.features.length + " features; max=" + max + " min=" + min + " mean=" + mean);
 
             // Transform GeoJSON into [lat, lon, intensity] format for Leaflet.heat
             const heatData = geojson.features.map(f => {
                 // GeoJSON is [Lon, Lat], Leaflet needs [Lat, Lon]
                 const lat = f.geometry.coordinates[1];
                 const lon = f.geometry.coordinates[0];
-                const depth = f.properties.depth_mm;
+                const val = f.properties[propName];
 
-                // Scale intensity down. Leaflet heat expects 0.0-1.0 usually, 
-                // but handles higher values by saturating. 
-                // Adjust divider (e.g., /2000) based on your max snow depth.
-                return [lat, lon, depth / 2000]; 
+                // TODO: scale intensity
+                return [lat, lon, val / 10000];
             });
 
             heatLayer = L.heatLayer(heatData, {
+                minOpacity: 0.8,
                 radius: 25,
                 blur: 15,
                 maxZoom: 10,
