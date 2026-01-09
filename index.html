@@ -1,10 +1,20 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title>Snowpack Prototype</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
     <style>
-      #map { height: 800px; width: 100%; }
+      body { font-family: sans-serif; margin: 20px; }
+      #map { height: 800px; width: 100%; border-radius: 8px; margin-top: 15px; }
+      .controls { background: #f4f4f4; padding: 15px; border-radius: 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      input[type="text"] { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; min-width: 200px; }
+      button { padding: 8px 15px; background: #0288D1; color: white; border: none; border-radius: 4px; cursor: pointer; }
+      button:hover { background: #01579b; }
+      #log { margin-top: 10px; color: #666; font-size: 0.9em; }
     </style>
   </head>
+  <body>
 
   <div class="controls">
     <label for="kmlUrl"><strong>KML URL:</strong></label>
@@ -15,53 +25,85 @@
     <input type="text" id="heatmapUrl" placeholder="https://example.com/data.json" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow_depth_low_res.geojson">
     <button onclick="loadData()">Add Layer</button>
   </div>
-  <div id="messages"></div>
-  <div id="map"></div>
   
-  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&libraries=visualization&callback=initMap"></script>
+  <div id="map"></div>
+  <div id="log"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+
   <script type="text/javascript">
-    let map;    
+    let map;
+    let kmlLayerGroup = null;
+    let heatLayer = null;
 
     function info(message) {
-        document.getElementById("messages").innerHTML += message;
-    }
-
-    function error(message) {
+        const msgDiv = document.getElementById("log");
+        msgDiv.innerHTML += `<div>${message}</div>`;
         console.log(message);
     }
 
-   
+    function error(message, err) {
+        console.error(message, err);
+        document.getElementById("log").innerHTML += `<div style="color:red;">Error: ${message}</div>`;
+    }
+
     function initMap() {
-        map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 8,
-            center: { lat: 38.5, lng: -120.0 }      
-        });
+        map = L.map('map').setView([38.5, -120.0], 8);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        info("Map initialized");
     }
 
     async function loadData() {
         const url = document.getElementById("heatmapUrl").value.trim();
+
+        if (heatLayer) {
+            map.removeLayer(heatLayer);
+        }
+
         try {
             info("Loading " + url);
             const response = await fetch(url);
             const geojson = await response.json();
             info("Loaded " + geojson.features.length + " features");
 
-            const heatmapData = geojson.features.map(f => {
-                return {
-                    location: new google.maps.LatLng(f.geometry.coordinates[1], f.geometry.coordinates[0]),
-                    weight: f.properties.depth_mm
-                };
+            // Transform GeoJSON into [lat, lon, intensity] format for Leaflet.heat
+            const heatData = geojson.features.map(f => {
+                // GeoJSON is [Lon, Lat], Leaflet needs [Lat, Lon]
+                const lat = f.geometry.coordinates[1];
+                const lon = f.geometry.coordinates[0];
+                const depth = f.properties.depth_mm;
+
+                // Scale intensity down. Leaflet heat expects 0.0-1.0 usually, 
+                // but handles higher values by saturating. 
+                // Adjust divider (e.g., /2000) based on your max snow depth.
+                return [lat, lon, depth / 2000]; 
             });
 
-            const heatmap = new google.maps.visualization.HeatmapLayer({
-                data: heatmapData,
-                map: map,
-                radius: 15,  // Adjust based on zoom
-                opacity: 0.8
-            });
-            info("Added heatmap");
+            heatLayer = L.heatLayer(heatData, {
+                radius: 25,
+                blur: 15,
+                maxZoom: 10,
+                gradient: {
+                    0.1: '#E0F7FA', // Trace
+                    0.3: '#4DD0E1', // Light
+                    0.5: '#0288D1', // Moderate
+                    0.7: '#303F9F', // Deep
+                    1.0: '#FF4081'  // Extreme
+                }
+            }).addTo(map);
+
+            info("Added heatmap layer");
         } catch (e) {
-            error("Error loading data:", e);
+            error("Error loading heatmap data:", e);
         }
     }
 
@@ -72,18 +114,35 @@
             return;
         }
 
-        const kmlLayer = new google.maps.KmlLayer({
-            url: url,
-            map: map,
-            preserveViewport: true
-        });
+        if (kmlLayerGroup) {
+            map.removeLayer(kmlLayerGroup);
+        }
 
-        kmlLayer.addListener('status_changed', () => {
-            if (kmlLayer.getStatus() !== 'OK') {
-                error('KML Error: ' + kmlLayer.getStatus() + '; ensure the URL is public and ends in .kml or .kmz');
-                kmlLayer.setMap(null);
-            }
-        });
+        info("Fetching KML...");
+
+        // Use Omnivore to fetch and parse KML
+        // Note: Omnivore converts KML to a standard Leaflet GeoJSON layer
+        const layer = omnivore.kml(url)
+            .on('ready', function() {
+                map.fitBounds(layer.getBounds());
+                info("KML loaded and bounds adjusted");
+                
+                // Add popup functionality to KML features
+                layer.eachLayer(function(l) {
+                    if (l.feature.properties && l.feature.properties.name) {
+                        l.bindPopup(l.feature.properties.name);
+                    }
+                });
+            })
+            .on('error', function(e) {
+                error("KML Error. Check CORS or file validity.", e);
+            })
+            .addTo(map);
+
+        kmlLayerGroup = layer;
     }
+
+    window.onload = initMap;
   </script>
+  </body>
 </html>
