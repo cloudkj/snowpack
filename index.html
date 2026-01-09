@@ -1,136 +1,113 @@
-
+<html>
   <head>
-    <title>SNODAS GeoJSON Visualization</title>
+    <title>Snowpack Prototype</title>
     <style>
       #map { height: 800px; width: 100%; }
-      .legend { background: white; padding: 10px; margin: 10px; border: 1px solid #ccc; }
     </style>
   </head>
 
-<div id="map"></div>
-<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&libraries=visualization&callback=initMap"></script>
-<script type="text/javascript">
+  <div class="controls">
+    <label for="kmlUrl"><strong>KML URL:</strong></label>
+    <input type="text" id="kmlUrl" placeholder="https://example.com/data.kml" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow.kml">
+    <button onclick="loadKML()">Add Layer</button>
 
-  /**
-   * Returns Hex colors based on the USDA Forest Service R5 Snow Depth Map.
-   * Legend values converted from inches to millimeters.
-   * @param {number} mm - Snow depth in millimeters.
-   */
-  function getSnowColor(mm) {
-      // Conversion: 1 inch = 25.4 mm
-      if (mm <= 10) return "transparent";        // 0 - 0.39 in (Trace)
-      if (mm <= 50) return "#E0F7FA";           // 0.39 - 2.0 in (Very Light Blue)
-      if (mm <= 100) return "#B2EBF2";          // 2.0 - 3.9 in
-      if (mm <= 250) return "#4DD0E1";          // 3.9 - 9.8 in
-      if (mm <= 500) return "#0288D1";          // 9.8 - 20 in (Bright Blue)
-      if (mm <= 1000) return "#303F9F";         // 20 - 39 in (Deep Indigo)
-      if (mm <= 1500) return "#7B1FA2";         // 39 - 59 in (Purple)
-      if (mm <= 2500) return "#C2185B";         // 59 - 98 in (Magenta/Pink)
-      if (mm <= 5000) return "#FF4081";         // 98 - 197 in (Hot Pink)
-      if (mm <= 7500) return "#F50057";         // 197 - 295 in
-      if (mm <= 10000) return "#D500F9";        // 295 - 394 in (Electric Purple)
-      return "#6200EA";                         // 394+ in (Deep Violet)
-  }  
-
-  // Helper: Scale point size slightly based on depth for visibility
-  function getScale(d) {
-      return d > 500 ? 4 : 2.5;
-  }
-
-  // Sierra Nevada Bounding Box
-  const BBOX = {
-      minLat: 38.0,
-      maxLat: 40.0,
-      minLon: -121.5,
-      maxLon: -119.0
-  };
- 
-  function initMap() {
-      console.log('initMap');
-    const map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 2,
-        restriction: {
-            latLngBounds: {
-                north: BBOX.maxLat,
-                south: BBOX.minLat,
-                west: BBOX.minLon,
-                east: BBOX.maxLon
-            },
-            strictBounds: true, // Optional: prevents the viewport from showing any gray area outside the bounds
-        },
-        center: { lat: 38.5, lng: -120.0 }      
-    });
-
-  async function loadData() {
-      //      const url =           "https://cloudkj.s3.us-east-1.amazonaws.com/snow_depth_low_res.geojson";
-            const url =           "https://cloudkj.s3.us-east-1.amazonaws.com/snow_depth.geojson";
-
-      try {
-          const response = await fetch(url);
-          const geojson = await response.json();
-
-          // Filter features based on coordinates
-          const filteredFeatures = geojson.features.filter(feature => {
-              const [lon, lat] = feature.geometry.coordinates;
-              return (lat >= BBOX.minLat && lat <= BBOX.maxLat) &&
-                  (lon >= BBOX.minLon && lon <= BBOX.maxLon);
-          });
-/*
-          // Reconstruct a valid GeoJSON object
-          const sierraGeoJson = {
-              type: "FeatureCollection",
-              features: filteredFeatures
-          };
-
-          // Load into Google Maps
-          map.data.addGeoJson(sierraGeoJson);
-*/
-
-          const heatmapData = filteredFeatures.map(f => {
-              return {
-                  location: new google.maps.LatLng(f.geometry.coordinates[1], f.geometry.coordinates[0]),
-                  weight: f.properties.depth_mm
-              };
-          });
-          console.log(heatmapData);
-
-          const heatmap = new google.maps.visualization.HeatmapLayer({
-              data: heatmapData,
-              map: map,
-              radius: 15,  // Adjust based on zoom
-              opacity: 0.8
-          });
-          
-      } catch (error) {
-          console.error("Error filtering data:", error);
-      }
-
-      //      var src = 'https://developers.google.com/maps/documentation/javascript/examples/kml/westcampus.kml';
-      var src = 'https://cloudkj.s3.us-east-1.amazonaws.com/snow.kml';
-      var kmlLayer = new google.maps.KmlLayer(src, {
-          suppressInfoWindows: true,
-          preserveViewport: true,
-          map: map
-      });
-  }
-
-      // Define Dynamic Styling based on 'depth_mm' property
-        map.data.setStyle((feature) => {
-          const depth = feature.getProperty("depth_mm");
-          
-          return {
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              fillColor: getSnowColor(depth),
-              fillOpacity: 0.7,
-              strokeWeight: 0,
-              scale: getScale(depth) 
-            }
-          };
-        });
-      
-
-      loadData();
-  }
+    <label for="heatmapUrl"><strong>Heatmap GeoJSON URL:</strong></label>
+    <input type="text" id="heatmapUrl" placeholder="https://example.com/data.json" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow_depth.geojson">
+    <button onclick="loadData()">Add Layer</button>
+  </div>
+  <div id="messages"></div>
+  <div id="map"></div>
   
-</script>
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&libraries=visualization&callback=initMap"></script>
+  <script type="text/javascript">
+    let map;    
+
+    function info(message) {
+        document.getElementById("messages").innerHTML += message;
+    }
+
+    function error(message) {
+        console.log(message);
+    }
+
+    // Sierra Nevada Bounding Box
+    const BBOX = {
+        minLat: 38.0,
+        maxLat: 40.0,
+        minLon: -121.5,
+        maxLon: -119.0
+    };
+    
+    function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 2,
+            restriction: {
+                latLngBounds: {
+                    north: BBOX.maxLat,
+                    south: BBOX.minLat,
+                    west: BBOX.minLon,
+                    east: BBOX.maxLon
+                },
+                strictBounds: true, // Optional: prevents the viewport from showing any gray area outside the bounds
+            },
+            center: { lat: 38.5, lng: -120.0 }      
+        });
+    }
+
+    async function loadData() {
+        const url = document.getElementById("heatmapUrl").value.trim();
+        try {
+            info("Loading " + url);
+            const response = await fetch(url);
+            const geojson = await response.json();
+            info("Loaded " + geojson.features.length + " features");
+
+            // Filter features based on coordinates
+            const filteredFeatures = geojson.features.filter(feature => {
+                const [lon, lat] = feature.geometry.coordinates;
+                return (lat >= BBOX.minLat && lat <= BBOX.maxLat) &&
+                    (lon >= BBOX.minLon && lon <= BBOX.maxLon);
+            });
+            info("Filtered to " + filteredFeatures.length + " features");
+
+            const heatmapData = filteredFeatures.map(f => {
+                return {
+                    location: new google.maps.LatLng(f.geometry.coordinates[1], f.geometry.coordinates[0]),
+                    weight: f.properties.depth_mm
+                };
+            });
+
+            const heatmap = new google.maps.visualization.HeatmapLayer({
+                data: heatmapData,
+                map: map,
+                radius: 15,  // Adjust based on zoom
+                opacity: 0.8
+            });
+            
+        } catch (e) {
+            error("Error filtering data:", e);
+        }
+    }
+
+    function loadKML() {
+        const url = document.getElementById("kmlUrl").value.trim();
+        if (!url) {
+            error("Invalid URL");
+            return;
+        }
+
+        const kmlLayer = new google.maps.KmlLayer({
+            url: url,
+            map: map,
+            preserveViewport: true
+        });
+
+        kmlLayer.addListener('status_changed', () => {
+            if (kmlLayer.getStatus() !== 'OK') {
+                error('KML Error: ' + kmlLayer.getStatus() + '; ensure the URL is public and ends in .kml or .kmz');
+                kmlLayer.setMap(null);
+            }
+        });
+    }
+  </script>
+</html>
