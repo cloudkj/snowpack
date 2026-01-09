@@ -12,7 +12,7 @@
     <button onclick="loadKML()">Add Layer</button>
 
     <label for="heatmapUrl"><strong>Heatmap GeoJSON URL:</strong></label>
-    <input type="text" id="heatmapUrl" placeholder="https://example.com/data.json" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow_depth.geojson">
+    <input type="text" id="heatmapUrl" placeholder="https://example.com/data.json" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow_depth_low_res.geojson">
     <button onclick="loadData()">Add Layer</button>
   </div>
   <div id="messages"></div>
@@ -30,26 +30,10 @@
         console.log(message);
     }
 
-    // Sierra Nevada Bounding Box
-    const BBOX = {
-        minLat: 38.0,
-        maxLat: 40.0,
-        minLon: -121.5,
-        maxLon: -119.0
-    };
-    
+   
     function initMap() {
         map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 2,
-            restriction: {
-                latLngBounds: {
-                    north: BBOX.maxLat,
-                    south: BBOX.minLat,
-                    west: BBOX.minLon,
-                    east: BBOX.maxLon
-                },
-                strictBounds: true, // Optional: prevents the viewport from showing any gray area outside the bounds
-            },
+            zoom: 8,
             center: { lat: 38.5, lng: -120.0 }      
         });
     }
@@ -62,15 +46,7 @@
             const geojson = await response.json();
             info("Loaded " + geojson.features.length + " features");
 
-            // Filter features based on coordinates
-            const filteredFeatures = geojson.features.filter(feature => {
-                const [lon, lat] = feature.geometry.coordinates;
-                return (lat >= BBOX.minLat && lat <= BBOX.maxLat) &&
-                    (lon >= BBOX.minLon && lon <= BBOX.maxLon);
-            });
-            info("Filtered to " + filteredFeatures.length + " features");
-
-            const heatmapData = filteredFeatures.map(f => {
+            const heatmapData = geojson.features.map(f => {
                 return {
                     location: new google.maps.LatLng(f.geometry.coordinates[1], f.geometry.coordinates[0]),
                     weight: f.properties.depth_mm
@@ -83,9 +59,9 @@
                 radius: 15,  // Adjust based on zoom
                 opacity: 0.8
             });
-            
+            info("Added heatmap");
         } catch (e) {
-            error("Error filtering data:", e);
+            error("Error loading data:", e);
         }
     }
 
