@@ -6,10 +6,10 @@ single map. An example is plotting popular ski destinations and layering out the
 latest snow depth data. The prototype currently supports adding points of
 interest data via KML files and heatmap data via GeoJSON files.
 
-# Data Sources
+## Data Sources
 
 * Points of interest
-  * 
+  * TODO
 * Heatmaps
   * National Snow and Ice Data Center (NSIDC) Snow Data: https://nsidc.org/data/g02158/versions/1
   * USGS Earthquakes: https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php
@@ -21,7 +21,7 @@ as KML/KMZ files.
 For heatmaps, some data sources require custom adapter logic to parse, format,
 and convert the data into the GeoJSON format.
 
-## Example
+### Example
 
 For snow depth data from NSIDC, we provide an example adapter that is able to
 downlaod and [convert](https://nsidc.org/sites/default/files/g02158-v001-userguide_2_1.pdf)
