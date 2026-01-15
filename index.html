@@ -21,11 +21,11 @@
     <input type="text" id="kmlUrl" placeholder="https://example.com/data.kml" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow.kml">
     <button onclick="loadKML()">Add Layer</button>
 
-    <label for="heatmapUrl"><strong>Heatmap GeoJSON URL:</strong></label>
-    <input type="text" id="heatmapUrl" placeholder="https://example.com/data.json" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow_depth_low_res.geojson">
+    <label for="geoJsonUrl"><strong>Heatmap GeoJSON URL:</strong></label>
+    <input type="text" id="geoJsonUrl" placeholder="https://example.com/data.json" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow_depth_low_res.geojson">
     <label for="heatmapIntensityPropertyName"><strong>Heatmap Intensity Property Name:</strong></label>
     <input type="text" id="heatmapIntensityPropertyName" placeholder="depth_mm" value="depth_mm">    
-    <button onclick="loadData()">Add Layer</button>
+    <button onclick="loadGeoJSON()">Add Layer</button>
   </div>
   
   <div id="map"></div>
@@ -38,8 +38,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 
   <script type="text/javascript">
+    let renderer = L.canvas();
     let map;
     let kmlLayerGroup = null;
+    let geoJsonLayer = null;
     let heatLayer = null;
 
     function info(message) {
@@ -54,7 +56,7 @@
     }
 
     function initMap() {
-        map = L.map('map').setView([38.5, -120.0], 8);
+        map = L.map('map', { renderer: renderer, preferCanvas: true }).setView([38.5, -120.0], 8);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -64,8 +66,48 @@
         info("Map initialized");
     }
 
-    async function loadData() {
-        const url = document.getElementById("heatmapUrl").value.trim();
+    const SNOW_SCALE = [
+        { limit: 10, color: 'transparent', label: '0-0.39"' },
+        { limit: 50, color: '#E0F7FA', label: '0.39-2"' },
+        { limit: 100, color: '#B2EBF2', label: '2-3.9"' },
+        { limit: 250, color: '#4DD0E1', label: '3.9-9.8"' },
+        { limit: 500, color: '#0288D1', label: '9.8-20"' },
+        { limit: 1000, color: '#303F9F', label: '20-39"' },
+        { limit: 1500, color: '#7B1FA2', label: '39-59"' },
+        { limit: 2500, color: '#C2185B', label: '59-98"' },
+        { limit: 5000, color: '#FF4081', label: '98-197"' }
+    ];
+
+    function getColor(mm) {
+        const band = SNOW_SCALE.find(s => mm <= s.limit);
+        return band ? band.color : '#6200EA';
+    }
+    
+    async function loadGeoJSON() {
+        const url = document.getElementById("geoJsonUrl").value.trim();
+        if (geoJsonLayer) {
+            map.removeLayer(geoJsonLayer);
+        }
+        
+        info("Loading " + url);
+        const response = await fetch(url);
+        const data = await response.json();
+        info("Loaded " + data.features.length + " features");
+
+        geoJsonLayer = L.geoJson(data, {
+            style: function(feature) {
+                return {
+                    fillColor: feature.properties.c,
+                    fillOpacity: 0.7,
+                    renderer: renderer,
+                    stroke: false
+                };
+            }
+        }).addTo(map);
+    }
+
+    async function loadHeatmap() {
+        const url = document.getElementById("geoJsonUrl").value.trim();
         const propName = document.getElementById("heatmapIntensityPropertyName").value.trim();
         if (!propName) {
             error("Missing intensity property name");
@@ -82,6 +124,7 @@
             const geojson = await response.json();
 
             const vals = geojson.features.map(f => f.properties[propName]);
+            console.log(vals);
             const max = vals.reduce((a, b) => Math.max(a, b));
             const min = vals.reduce((a, b) => Math.min(a, b));
             const mean = vals.reduce((a, b) => a + b) / vals.length;
@@ -95,7 +138,7 @@
                 const val = f.properties[propName];
 
                 // TODO: scale intensity
-                return [lat, lon, val / 10000];
+                return [lat, lon, val];// / 10000];
             });
 
             heatLayer = L.heatLayer(heatData, {
