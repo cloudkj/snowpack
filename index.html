@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Snowpack Prototype</title>
+    <title>snowpack example - California SNO-Parks</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    
+
     <style>
       body { font-family: sans-serif; margin: 20px; }
       #map { height: 800px; width: 100%; border-radius: 8px; margin-top: 15px; }
@@ -13,190 +13,36 @@
       button:hover { background: #01579b; }
       #log { margin-top: 10px; color: #666; font-size: 0.9em; }
     </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "leaflet": "https://esm.sh/leaflet@1.9.4",
+            "togeojson": "https://esm.sh/@mapbox/togeojson@0.16.0",
+            "geojson-vt": "https://esm.sh/geojson-vt@3.2.1",
+            "leaflet-geojson-vt": "./leaflet-geojson-vt-1.1.0/src/leaflet-geojson-vt.js"
+        }
+    }
+    </script>
   </head>
   <body>
 
+  <div id="map"></div>
+
   <div class="controls">
     <label for="kmlUrl"><strong>KML URL:</strong></label>
-    <input type="text" id="kmlUrl" placeholder="https://example.com/data.kml" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow.kml">
-    <button onclick="loadKML()">Add Layer</button>
+    <input type="text" id="kmlUrl" value="./examples/ca_sno_parks/ca_sno_parks.kml">
+    <button id="loadKML">Add Layer</button>
 
     <label for="geoJsonUrl"><strong>Heatmap GeoJSON URL:</strong></label>
-    <input type="text" id="geoJsonUrl" placeholder="https://example.com/data.json" value="https://cloudkj.s3.us-east-1.amazonaws.com/snow_depth_low_res.geojson">
+    <input type="text" id="geoJsonUrl" value="./examples/ca_sno_parks/snodas_snow_depth_20261114.geojson">
     <label for="heatmapIntensityPropertyName"><strong>Heatmap Intensity Property Name:</strong></label>
     <input type="text" id="heatmapIntensityPropertyName" placeholder="depth_mm" value="depth_mm">    
-    <button onclick="loadGeoJSON()">Add Layer</button>
+    <button id="loadGeoJSON">Add Layer</button>
   </div>
   
-  <div id="map"></div>
   <div id="log"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  
-  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
-
-  <script type="text/javascript">
-    let renderer = L.canvas();
-    let map;
-    let kmlLayerGroup = null;
-    let geoJsonLayer = null;
-    let heatLayer = null;
-
-    function info(message) {
-        const msgDiv = document.getElementById("log");
-        msgDiv.innerHTML += `<div>${message}</div>`;
-        console.log(message);
-    }
-
-    function error(message, err) {
-        console.error(message, err);
-        document.getElementById("log").innerHTML += `<div style="color:red;">Error: ${message}</div>`;
-    }
-
-    function initMap() {
-        map = L.map('map', { renderer: renderer, preferCanvas: true }).setView([38.5, -120.0], 8);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        info("Map initialized");
-    }
-
-    const SNOW_SCALE = [
-        { limit: 10, color: 'transparent', label: '0-0.39"' },
-        { limit: 50, color: '#E0F7FA', label: '0.39-2"' },
-        { limit: 100, color: '#B2EBF2', label: '2-3.9"' },
-        { limit: 250, color: '#4DD0E1', label: '3.9-9.8"' },
-        { limit: 500, color: '#0288D1', label: '9.8-20"' },
-        { limit: 1000, color: '#303F9F', label: '20-39"' },
-        { limit: 1500, color: '#7B1FA2', label: '39-59"' },
-        { limit: 2500, color: '#C2185B', label: '59-98"' },
-        { limit: 5000, color: '#FF4081', label: '98-197"' }
-    ];
-
-    function getColor(mm) {
-        const band = SNOW_SCALE.find(s => mm <= s.limit);
-        return band ? band.color : '#6200EA';
-    }
-    
-    async function loadGeoJSON() {
-        const url = document.getElementById("geoJsonUrl").value.trim();
-        if (geoJsonLayer) {
-            map.removeLayer(geoJsonLayer);
-        }
-        
-        info("Loading " + url);
-        const response = await fetch(url);
-        const data = await response.json();
-        info("Loaded " + data.features.length + " features");
-
-        geoJsonLayer = L.geoJson(data, {
-            style: function(feature) {
-                return {
-                    fillColor: feature.properties.c,
-                    fillOpacity: 0.7,
-                    renderer: renderer,
-                    stroke: false
-                };
-            }
-        }).addTo(map);
-    }
-
-    async function loadHeatmap() {
-        const url = document.getElementById("geoJsonUrl").value.trim();
-        const propName = document.getElementById("heatmapIntensityPropertyName").value.trim();
-        if (!propName) {
-            error("Missing intensity property name");
-            return;
-        }
-
-        if (heatLayer) {
-            map.removeLayer(heatLayer);
-        }
-
-        try {
-            info("Loading " + url);
-            const response = await fetch(url);
-            const geojson = await response.json();
-
-            const vals = geojson.features.map(f => f.properties[propName]);
-            console.log(vals);
-            const max = vals.reduce((a, b) => Math.max(a, b));
-            const min = vals.reduce((a, b) => Math.min(a, b));
-            const mean = vals.reduce((a, b) => a + b) / vals.length;
-            info("Loaded " + geojson.features.length + " features; max=" + max + " min=" + min + " mean=" + mean);
-
-            // Transform GeoJSON into [lat, lon, intensity] format for Leaflet.heat
-            const heatData = geojson.features.map(f => {
-                // GeoJSON is [Lon, Lat], Leaflet needs [Lat, Lon]
-                const lat = f.geometry.coordinates[1];
-                const lon = f.geometry.coordinates[0];
-                const val = f.properties[propName];
-
-                // TODO: scale intensity
-                return [lat, lon, val];// / 10000];
-            });
-
-            heatLayer = L.heatLayer(heatData, {
-                minOpacity: 0.8,
-                radius: 25,
-                blur: 15,
-                maxZoom: 10,
-                gradient: {
-                    0.1: '#E0F7FA', // Trace
-                    0.3: '#4DD0E1', // Light
-                    0.5: '#0288D1', // Moderate
-                    0.7: '#303F9F', // Deep
-                    1.0: '#FF4081'  // Extreme
-                }
-            }).addTo(map);
-
-            info("Added heatmap layer");
-        } catch (e) {
-            error("Error loading heatmap data:", e);
-        }
-    }
-
-    function loadKML() {
-        const url = document.getElementById("kmlUrl").value.trim();
-        if (!url) {
-            error("Invalid URL");
-            return;
-        }
-
-        if (kmlLayerGroup) {
-            map.removeLayer(kmlLayerGroup);
-        }
-
-        info("Fetching KML...");
-
-        // Use Omnivore to fetch and parse KML
-        // Note: Omnivore converts KML to a standard Leaflet GeoJSON layer
-        const layer = omnivore.kml(url)
-            .on('ready', function() {
-                map.fitBounds(layer.getBounds());
-                info("KML loaded and bounds adjusted");
-                
-                // Add popup functionality to KML features
-                layer.eachLayer(function(l) {
-                    if (l.feature.properties && l.feature.properties.name) {
-                        l.bindPopup(l.feature.properties.name);
-                    }
-                });
-            })
-            .on('error', function(e) {
-                error("KML Error. Check CORS or file validity.", e);
-            })
-            .addTo(map);
-
-        kmlLayerGroup = layer;
-    }
-
-    window.onload = initMap;
-  </script>
+  <script src="https://unpkg.com/geojson-vt@3.2.0/geojson-vt.js"></script>
+  <script defer type="module" src="src/snowpack.js"></script>
   </body>
 </html>
