@@ -17,7 +17,10 @@ def get_bucket_info(mm):
     return 11, "#6200EA", "787+ in"
 
 def create_contiguous_dissolve(input_file, output_file):
-    HALF_SIZE = 0.00833333 / 2
+    # Standard SNODAS resolution
+    RES = 0.00833333
+    # We add a tiny 'fudge factor' to the half-size to ensure overlap
+    HALF_SIZE = (RES + 0.000005) / 2
     
     with open(input_file, 'r') as f:
         data = json.load(f)
@@ -46,6 +49,8 @@ def create_contiguous_dissolve(input_file, output_file):
     # 3. Explode (Breaks MultiPolygons into separate rows if they are NOT touching)
     # index_parts=False ensures we get a clean flat index back
     contiguous_gdf = dissolved.explode(index_parts=False).reset_index()
+
+    contiguous_gdf['geometry'] = contiguous_gdf['geometry'].buffer(0)
 
     # 4. Save to GeoJSON
     contiguous_gdf.to_file(output_file, driver='GeoJSON')
