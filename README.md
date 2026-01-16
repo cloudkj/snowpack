@@ -9,7 +9,7 @@ files.
 
 ## Demo
 
-California [SNO-Parks](https://ohv.parks.ca.gov/?page_id=30701) Snow Depth
+[California SNO-Parks](https://ohv.parks.ca.gov/?page_id=30701) Snow Depth
 Report: [https://cloudkj.github.io/snowpack/examples/ca_sno_parks/](https://cloudkj.github.io/snowpack/examples/ca_sno_parks/)
 
 ## Usage
