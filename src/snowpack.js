@@ -7,21 +7,13 @@ let map;
 let kmlLayer = null;
 let geoJsonLayer = null;
 
-function info(message) {
-    const msgDiv = document.getElementById("log");
-    msgDiv.innerHTML += `<div>${message}</div>`;
-    console.log(message);
-}
-
 export async function loadKML(url, propNames) {
     if (kmlLayer) {
         map.removeLayer(kmlLayer);
     }
 
-    info("Loading " + url);
     const response = await fetch(url);
     const text = await response.text();
-
     const parser = new DOMParser();
     const kmlDom = parser.parseFromString(text, 'text/xml');
     const kmlData = togeojson.kml(kmlDom);
@@ -43,10 +35,8 @@ export async function loadGeoJSON(url, propNames) {
         map.removeLayer(geoJsonLayer);
     }
 
-    info("Loading " + url);
     const response = await fetch(url);
     const data = await response.json();
-    info("Loaded " + data.features.length + " features");
 
     const colorPropertyName = propNames.color;
     const popupPropertyName = propNames.popup;
@@ -80,5 +70,4 @@ export function initMap(containerId, centerCoords, zoomLevel) {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-    info("Map initialized");
 }

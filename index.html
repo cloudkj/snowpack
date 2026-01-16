@@ -1,18 +1,105 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>snowpack example - California SNO-Parks</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Snowpack - Mobile Optimized</title>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
     <style>
-      body { font-family: sans-serif; margin: 20px; }
-      #map { height: 800px; width: 100%; border-radius: 8px; margin-top: 15px; }
-      .controls { background: #f4f4f4; padding: 15px; border-radius: 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-      input[type="text"] { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; min-width: 200px; }
-      button { padding: 8px 15px; background: #0288D1; color: white; border: none; border-radius: 4px; cursor: pointer; }
-      button:hover { background: #01579b; }
-      #log { margin-top: 10px; color: #666; font-size: 0.9em; }
+      :root {
+        --primary-blue: #0288D1;
+        --dark-blue: #01579b;
+        --bg-gray: #f4f4f4;
+      }
+
+      body { 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0; 
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background-color: #fff;
+      }
+
+      #map { 
+        flex-grow: 1;
+        width: 100%;
+        z-index: 1;
+      }
+
+      .controls { 
+        background: var(--bg-gray); 
+        padding: 15px; 
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        z-index: 1000;
+      }
+
+      .input-group {
+        display: contents;
+      }
+
+      label {
+        grid-column: 1 / span 2;
+        font-size: 0.85rem;
+        font-weight: bold;
+        color: #444;
+      }
+
+      input[type="text"] { 
+        padding: 12px;
+        border: 1px solid #ccc; 
+        border-radius: 6px; 
+        font-size: 16px;
+      }
+
+      button { 
+        padding: 12px 20px; 
+        background: var(--primary-blue); 
+        color: white; 
+        border: none; 
+        border-radius: 6px; 
+        cursor: pointer; 
+        font-weight: bold;
+        transition: background 0.2s;
+      }
+
+      button:active { background: var(--dark-blue); }
+
+      #message { 
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.9);
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        z-index: 2000;
+        pointer-events: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        display: none; /* Hidden unless text is present */
+      }
+      
+      #message:not(:empty) { display: block; }
+
+      /* Desktop adjustments */
+      @media (min-width: 768px) {
+        .controls {
+          grid-template-columns: auto 1fr auto auto 1fr auto;
+          align-items: center;
+        }
+        label { grid-column: auto; }
+        body { padding: 10px; height: calc(100vh - 20px); }
+        #map { border-radius: 8px; margin-bottom: 10px; }
+      }
     </style>
+
     <script type="importmap">
     {
         "imports": {
@@ -26,32 +113,41 @@
   </head>
   <body>
 
+  <div id="message"></div>
   <div id="map"></div>
 
   <div class="controls">
-    <label for="kmlUrl"><strong>KML URL:</strong></label>
-    <input type="text" id="kmlUrl" value="./examples/ca_sno_parks/ca_sno_parks.kml">
-    <button id="loadKML">Add</button>
+    <div class="input-group">
+        <label for="kmlUrl">CA SNO-Parks (KML)</label>
+        <input type="text" id="kmlUrl" value="./examples/ca_sno_parks/ca_sno_parks.kml">
+        <button id="loadKML">Add</button>
+    </div>
 
-    <label for="geoJsonUrl"><strong>GeoJSON URL:</strong></label>
-    <input type="text" id="geoJsonUrl" value="./examples/ca_sno_parks/snodas_snow_depth_20261114.geojson">
-    <button id="loadGeoJSON">Add</button>
+    <div class="input-group">
+        <label for="geoJsonUrl">Snow Depth (GeoJSON)</label>
+        <input type="text" id="geoJsonUrl" value="./examples/ca_sno_parks/snodas_snow_depth_20261114.geojson">
+        <button id="loadGeoJSON">Add</button>
+    </div>
   </div>
-  
-  <div id="log"></div>
 
   <script defer type="module">
     import { initMap, loadKML, loadGeoJSON } from './src/snowpack.js';
 
+    const message = document.getElementById('message');
+    const log = (s) => { message.innerText = s; setTimeout(() => message.innerText = '', 3000); };
+
     initMap('map', [39.5, -120.5], 8);
 
-    document.getElementById('loadKML').addEventListener('click', function() {
+    document.getElementById('loadKML').addEventListener('click', async function() {
         const url = document.getElementById("kmlUrl").value.trim();
-        loadKML(url, {popup: 'name'});
+        log("Loading KML...");
+        await loadKML(url, {popup: 'name'});
     });
-    document.getElementById('loadGeoJSON').addEventListener('click', function() {
+
+    document.getElementById('loadGeoJSON').addEventListener('click', async function() {
         const url = document.getElementById("geoJsonUrl").value.trim();
-        loadGeoJSON(url, {color: 'c', popup: 'label'});
+        log("Loading Snow Data...");
+        await loadGeoJSON(url, {color: 'c', popup: 'label'});
     });
   </script>
   </body>
