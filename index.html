@@ -40,6 +40,19 @@
   
   <div id="log"></div>
 
-  <script defer type="module" src="src/snowpack.js"></script>
+  <script defer type="module">
+    import { initMap, loadKML, loadGeoJSON } from './src/snowpack.js';
+
+    initMap('map', [39.5, -120.5], 8);
+
+    document.getElementById('loadKML').addEventListener('click', function() {
+        const url = document.getElementById("kmlUrl").value.trim();
+        loadKML(url, {popup: 'name'});
+    });
+    document.getElementById('loadGeoJSON').addEventListener('click', function() {
+        const url = document.getElementById("geoJsonUrl").value.trim();
+        loadGeoJSON(url, {color: 'c', popup: 'label'});
+    });
+  </script>
   </body>
 </html>

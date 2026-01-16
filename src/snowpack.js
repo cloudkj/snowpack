@@ -13,8 +13,7 @@ function info(message) {
     console.log(message);
 }
 
-async function loadKML() {
-    const url = document.getElementById("kmlUrl").value.trim();
+export async function loadKML(url, propNames) {
     if (kmlLayer) {
         map.removeLayer(kmlLayer);
     }
@@ -27,10 +26,11 @@ async function loadKML() {
     const kmlDom = parser.parseFromString(text, 'text/xml');
     const kmlData = togeojson.kml(kmlDom);
 
+    const popupPropertyName = propNames.popup;
     const layer = L.geoJSON(kmlData, {
         onEachFeature: function(f, l) {
-            if (f.properties && f.properties.name) {
-                l.bindPopup(f.properties.name);
+            if (f.properties && f.properties[popupPropertyName]) {
+                l.bindPopup(f.properties[popupPropertyName]);
             }
         }
     }).addTo(map);
@@ -38,8 +38,7 @@ async function loadKML() {
     kmlLayer = layer;
 }
 
-async function loadGeoJSON() {
-    const url = document.getElementById("geoJsonUrl").value.trim();
+export async function loadGeoJSON(url, propNames) {
     if (geoJsonLayer) {
         map.removeLayer(geoJsonLayer);
     }
@@ -49,28 +48,37 @@ async function loadGeoJSON() {
     const data = await response.json();
     info("Loaded " + data.features.length + " features");
 
+    const colorPropertyName = propNames.color;
+    const popupPropertyName = propNames.popup;
     geoJsonLayer = L.vectorGrid.slicer(data, {
+        interactive: true,
         vectorTileLayerStyles: {
             sliced: function(properties, zoom) {
                 return {
-                    color: properties.c,
+                    color: properties[colorPropertyName],
                     fill: true,
-                    fillColor: properties.c,
+                    fillColor: properties[colorPropertyName],
                     fillOpacity: 0.7,
                     stroke: false
                 };
             }
         }
+    }).on('click', function(e) {
+        const properties = e.layer.properties;
+        if (properties[popupPropertyName]) {
+            L.popup()
+                .setContent(properties['label'])
+                .setLatLng(e.latlng)
+                .openOn(map);
+        }
     }).addTo(map);
 }
 
-map = L.map('map', { renderer: renderer, preferCanvas: true }).setView([38.5, -120.0], 8);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-}).addTo(map);
-info("Map initialized");
-
-document.getElementById('loadKML').addEventListener('click', loadKML);
-document.getElementById('loadGeoJSON').addEventListener('click', loadGeoJSON);
+export function initMap(containerId, centerCoords, zoomLevel) {
+    map = L.map(containerId, { renderer: renderer, preferCanvas: true }).setView(centerCoords, zoomLevel);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    info("Map initialized");
+}
