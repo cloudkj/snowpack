@@ -116,14 +116,23 @@
     };
 
     // Initialize
-    initMap('map', [39.5, -120.5], 8);
+    initMap('map', {
+      bounds: {
+        minLat: 32.5,
+        maxLat: 42.0,
+        minLng: -124.5,
+        maxLng: -114.0
+      },
+      centerCoords: [39.5, -120.5],
+      zoomLevel: 8
+    });
 
     try {
       log("Loading California SNO-Parks...");
       await loadKML("./ca_sno_parks.kml", {popup: 'name'});
       
       const date = "20260115";
-      const snowFile = "./snodas_snow_depth_" + date + ".geojson";
+      const snowFile = "./snodas_snow_depth_ca_nv_" + date + ".geojson";
       const metadataFile = "./metadata_" + date + ".json";
       log("Loading Snow Depth Data...");
       await loadGeoJSON(snowFile, {color: 'c', popup: 'label'});
