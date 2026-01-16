@@ -9,9 +9,8 @@ files.
 
 ## Demo
 
-[https://cloudkj.github.io/snowpack/examples/ca_sno_parks/](https://cloudkj.github.io/snowpack/examples/ca_sno_parks/) -
-[California SNO-Parks](https://ohv.parks.ca.gov/?page_id=30701) combined with
-[current snow depth](https://www.fs.usda.gov/sites/nfs/files/r05/publication/R5_SnowDepth_Map.html):
+California SNO-Parks combined with current snow depth:
+[https://cloudkj.github.io/snowpack/examples/ca_sno_parks/](https://cloudkj.github.io/snowpack/examples/ca_sno_parks/)
 
 ## Usage
 
