@@ -64,8 +64,20 @@ export async function loadGeoJSON(url, propNames) {
     }).addTo(map);
 }
 
-export function initMap(containerId, centerCoords, zoomLevel) {
-    map = L.map(containerId, { renderer: renderer, preferCanvas: true }).setView(centerCoords, zoomLevel);
+export function initMap(containerId, options) {//centerCoords, zoomLevel) {
+    let maxBounds = null;
+    if (options.bounds) {
+        maxBounds = L.latLngBounds(
+            L.latLng(options.bounds.minLat, options.bounds.minLng),
+            L.latLng(options.bounds.maxLat, options.bounds.maxLng));
+        
+    }
+    console.log(maxBounds);
+    map = L.map(containerId, {
+        maxBounds: maxBounds,
+        renderer: renderer,
+        preferCanvas: true
+    }).setView(options.centerCoords, options.zoomLevel);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors'
