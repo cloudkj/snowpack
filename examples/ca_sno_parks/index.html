@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>California SNO-Parks Snow Depth Report</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <style>
+      :root {
+        --primary-blue: #0288D1;
+        --dark-blue: #01579b;
+        --bg-gray: #f4f4f4;
+        --nav-height: 56px;
+      }
+
+      body { 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0; 
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background-color: #fff;
+        overflow: hidden;
+      }
+
+      nav {
+        height: var(--nav-height);
+        background-color: var(--primary-blue);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 2000;
+      }
+
+      nav h1 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .report-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      #map { 
+        flex-grow: 1;
+        width: 100%;
+        z-index: 1;
+      }
+
+      #message { 
+        position: absolute;
+        top: calc(var(--nav-height) + 12px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(33, 33, 33, 0.9);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        z-index: 3000;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: none;
+      }
+      
+      #message:not(:empty) { display: block; }
+
+      @media (min-width: 768px) {
+        body { padding: 0; height: 100vh; }
+      }
+    </style>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "leaflet": "https://esm.sh/leaflet@1.9.4",
+            "togeojson": "https://esm.sh/@mapbox/togeojson@0.16.0",
+            "geojson-vt": "https://esm.sh/geojson-vt@3.2.1",
+            "leaflet.vectorgrid": "https://esm.sh/leaflet.vectorgrid"
+        }
+    }
+    </script>
+  </head>
+  <body>
+
+  <nav>
+    <h1>California SNO-Parks Snow Depth Report</h1>
+    <div class="report-badge" id="reportDate">Loading Data...</div>
+  </nav>
+
+  <div id="message"></div>
+  <div id="map"></div>
+
+  <script defer type="module">
+    import { initMap, loadKML, loadGeoJSON } from '../../src/snowpack.js';
+
+    const message = document.getElementById('message');
+    const dateBadge = document.getElementById('reportDate');
+    
+    const log = (s) => { 
+      message.innerText = s; 
+      if (s) setTimeout(() => message.innerText = '', 3000); 
+    };
+
+    // Initialize
+    initMap('map', [39.5, -120.5], 8);
+
+    try {
+      log("Loading California SNO-Parks...");
+      await loadKML("./ca_sno_parks.kml", {popup: 'name'});
+      
+      const date = "20260115";
+      const snowFile = "./snodas_snow_depth_" + date + ".geojson";
+      const metadataFile = "./metadata_" + date + ".json";
+      log("Loading Snow Depth Data...");
+      await loadGeoJSON(snowFile, {color: 'c', popup: 'label'});
+      
+      fetch(metadataFile).then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json(); // Parse the JSON data into a JavaScript object
+          })
+      .then(data => {
+          const match = data["date"].match(/(\d{4})(\d{2})(\d{2})/);
+          if (match) {
+            const [_, year, month, day] = match;
+            dateBadge.innerText = `Snow Depth Data for ${year}-${month}-${day}`;
+          } else {
+            dateBadge.innerText = "Current Report";
+          }
+      })
+      log("Map Ready");
+    } catch (e) {
+      log("Error loading map data");
+      console.error(e);
+    }
+  </script>
+  </body>
+</html>

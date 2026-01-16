@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Official CA Snow Parks</name>
+    <Style id="icon-1899-0288D1-nodesc-normal">
+      <IconStyle>
+        <color>ffd18802</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1899-0288D1-nodesc-highlight">
+      <IconStyle>
+        <color>ffd18802</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1899-0288D1-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1899-0288D1-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1899-0288D1-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>Yuba Pass SNO-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -120.48975,39.617,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Donner Summit SNO-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -120.3432298,39.3396704,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Blackwood Canyon SNO-PARK</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -120.1584793,39.113794,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Taylor Creek Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -120.0575186,38.9319524,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Echo Lake Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -120.0338423,38.8235689,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Hope Valley Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -119.9412824,38.7506977,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Carson Pass Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -119.9897682,38.6955588,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Meiss Meadow Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -119.9916875,38.6963125,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Iron Mountain Sno Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -120.213853,38.628942,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Round Valley Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -120.019637,38.4849274,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Lake Alpine SNO-PARK</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -120.0173005,38.4817337,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Spicer Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -120.0771161,38.4288499,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Highway 108 Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -119.9929444,38.2681595,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Tamarack Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -119.2018265,37.1624626,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Coyote Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -119.2068154,37.1669641,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Eastwood Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -119.1607457,37.2557292,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Huntington Lake Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -119.1741875,37.2514375,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Rock Creek Sno-Park</name>
+      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+      <Point>
+        <coordinates>
+          -118.717152,37.4939827,0
+        </coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>
