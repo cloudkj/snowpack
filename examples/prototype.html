@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Snowpack - Mobile Optimized</title>
+    <title>snowpack - prototype</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
@@ -119,19 +119,19 @@
   <div class="controls">
     <div class="input-group">
         <label for="kmlUrl">CA SNO-Parks (KML)</label>
-        <input type="text" id="kmlUrl" value="./examples/ca_sno_parks/ca_sno_parks.kml">
+        <input type="text" id="kmlUrl" value="./ca_sno_parks/ca_sno_parks.kml">
         <button id="loadKML">Add</button>
     </div>
 
     <div class="input-group">
         <label for="geoJsonUrl">Snow Depth (GeoJSON)</label>
-        <input type="text" id="geoJsonUrl" value="./examples/ca_sno_parks/snodas_snow_depth_20261114.geojson">
+        <input type="text" id="geoJsonUrl" value="./ca_sno_parks/snodas_snow_depth_20261114.geojson">
         <button id="loadGeoJSON">Add</button>
     </div>
   </div>
 
   <script defer type="module">
-    import { initMap, loadKML, loadGeoJSON } from './src/snowpack.js';
+    import { initMap, loadKML, loadGeoJSON } from '../src/snowpack.js';
 
     const message = document.getElementById('message');
     const log = (s) => { message.innerText = s; setTimeout(() => message.innerText = '', 3000); };
