@@ -25,6 +25,11 @@ def parse_snodas_v2(hdr_txt_path, dat_path, output_json):
     uly = float(meta.get('benchmark y-axis coordinate', 52.8704166666666))
     xdim = float(meta.get('x-axis resolution', 0.00833333333333333))
     ydim = float(meta.get('y-axis resolution', 0.00833333333333333))
+    date = '-'.join([
+        meta.get('created year'),
+        meta.get('created month'),
+        meta.get('created day'),
+    ])
     nodata = -9999
 
     # 2. Read Binary Data
@@ -69,7 +74,8 @@ def parse_snodas_v2(hdr_txt_path, dat_path, output_json):
             "file": os.path.basename(dat_path),
             "description": "NOHRSC SNODAS Snow Depth",
             "units": "millimeters",
-            "point_count": len(points)
+            "point_count": len(points),
+            "date": date
         },
         "data": points
     }
@@ -85,6 +91,3 @@ parse_snodas_v2(
     'us_ssmv11036tS__T0001TTNATS2026011405HP001.dat',
     'snow_depth.json'
 )
-
-#
-#
