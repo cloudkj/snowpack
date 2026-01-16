@@ -6,6 +6,20 @@ single map. An example is plotting popular ski destinations and layering out the
 latest snow depth data. The prototype currently supports adding points of
 interest data via KML files and heatmap data via GeoJSON files.
 
+## Usage
+
+    import { initMap, loadKML, loadGeoJSON } from '../src/snowpack.js';
+
+    initMap('map', { centerCoords: [39.5, -120.5], zoomLevel: 8 });
+
+    const kmlUrl = ...;
+    const kmlPropNames = { ... };
+    await loadKML(kmlUrl, kmlPropNames);
+
+    const geoJsonUrl = ...;
+    const geoJsonPropNames = { ... };
+    await loadGeoJSON(geoJsonUrl, geoJsonPropNames);
+
 ## Data Sources
 
 * Points of interest

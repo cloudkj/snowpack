@@ -64,7 +64,7 @@ export async function loadGeoJSON(url, propNames) {
     }).addTo(map);
 }
 
-export function initMap(containerId, options) {//centerCoords, zoomLevel) {
+export function initMap(containerId, options) {
     let maxBounds = null;
     if (options.bounds) {
         maxBounds = L.latLngBounds(

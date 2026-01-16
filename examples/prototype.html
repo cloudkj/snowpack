@@ -136,7 +136,10 @@
     const message = document.getElementById('message');
     const log = (s) => { message.innerText = s; setTimeout(() => message.innerText = '', 3000); };
 
-    initMap('map', [39.5, -120.5], 8);
+    initMap('map', {
+      centerCoords: [39.5, -120.5],
+      zoomLevel: 8
+    });
 
     document.getElementById('loadKML').addEventListener('click', async function() {
         const url = document.getElementById("kmlUrl").value.trim();
