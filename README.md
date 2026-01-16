@@ -9,12 +9,13 @@ files.
 
 ## Demo
 
-California SNO-Parks Snow Depth Report: https://cloudkj.github.io/snowpack/examples/ca_sno_parks/
+California [SNO-Parks](https://ohv.parks.ca.gov/?page_id=30701) Snow Depth
+Report: [https://cloudkj.github.io/snowpack/examples/ca_sno_parks/](https://cloudkj.github.io/snowpack/examples/ca_sno_parks/)
 
 ## Usage
 
 ```javascript
-import { initMap, loadKML, loadGeoJSON } from '../src/snowpack.js';
+import { initMap, loadKML, loadGeoJSON } from './src/snowpack.js';
 
 initMap('map', { centerCoords: [39.5, -120.5], zoomLevel: 8 });
 
@@ -43,9 +44,10 @@ markers as KML/KMZ files.
 For heatmaps, some data sources require custom adapter logic to parse, format,
 and convert the data into the GeoJSON format.
 
-### Worked Example
+### Snow Depth Data Example
 
-As part of the prototype for displaying snow depth data from NSIDC, we provide an example adapter
-that is able to downlaod and [convert](https://nsidc.org/sites/default/files/g02158-v001-userguide_2_1.pdf)
+As part of the prototype for displaying snow depth data from NSIDC, we provide an
+[example adapter](adapters/snodas/generate.py) that is able to download and
+[convert](https://nsidc.org/sites/default/files/g02158-v001-userguide_2_1.pdf)
 NSIDC Snow Data Assimilation System (SNODAS) [data](https://noaadata.apps.nsidc.org/NOAA/G02158/)
 into GeoJSON files.
