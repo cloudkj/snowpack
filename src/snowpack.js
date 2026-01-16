@@ -1,12 +1,11 @@
 import L from 'leaflet';
 import togeojson from 'togeojson';
-import 'leaflet-geojson-vt';
+import 'leaflet.vectorgrid';
 
 let renderer = L.canvas();
 let map;
-let kmlLayerGroup = null;
+let kmlLayer = null;
 let geoJsonLayer = null;
-let heatLayer = null;
 
 function info(message) {
     const msgDiv = document.getElementById("log");
@@ -14,23 +13,13 @@ function info(message) {
     console.log(message);
 }
 
-function error(message, err) {
-    console.error(message, err);
-    document.getElementById("log").innerHTML += `<div style="color:red;">Error: ${message}</div>`;
-}
-
 async function loadKML() {
     const url = document.getElementById("kmlUrl").value.trim();
-    if (!url) {
-        error("Invalid URL");
-        return;
+    if (kmlLayer) {
+        map.removeLayer(kmlLayer);
     }
 
-    if (kmlLayerGroup) {
-        map.removeLayer(kmlLayerGroup);
-    }
-
-    info("Fetching KML...");
+    info("Loading " + url);
     const response = await fetch(url);
     const text = await response.text();
 
@@ -46,7 +35,7 @@ async function loadKML() {
         }
     }).addTo(map);
     map.fitBounds(layer.getBounds());
-    kmlLayerGroup = layer;
+    kmlLayer = layer;
 }
 
 async function loadGeoJSON() {
@@ -60,20 +49,17 @@ async function loadGeoJSON() {
     const data = await response.json();
     info("Loaded " + data.features.length + " features");
 
-    geoJsonLayer = L.geoJson.vt(data, {
-        debug: 1,
-        maxZoom: 20,
-        indexMaxPoints: 200000,
-        tolerance: 3,
-        style: function (properties) {
-            return {
-                color: properties.c,
-                fill: true,
-                fillColor: properties.c,
-                fillOpacity: 0.7,
-                weight: 1,
-                stroke: true
-            };
+    geoJsonLayer = L.vectorGrid.slicer(data, {
+        vectorTileLayerStyles: {
+            sliced: function(properties, zoom) {
+                return {
+                    color: properties.c,
+                    fill: true,
+                    fillColor: properties.c,
+                    fillOpacity: 0.7,
+                    stroke: false
+                };
+            }
         }
     }).addTo(map);
 }

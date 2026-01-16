@@ -19,7 +19,7 @@
             "leaflet": "https://esm.sh/leaflet@1.9.4",
             "togeojson": "https://esm.sh/@mapbox/togeojson@0.16.0",
             "geojson-vt": "https://esm.sh/geojson-vt@3.2.1",
-            "leaflet-geojson-vt": "./leaflet-geojson-vt-1.1.0/src/leaflet-geojson-vt.js"
+            "leaflet.vectorgrid": "https://esm.sh/leaflet.vectorgrid"
         }
     }
     </script>
@@ -31,18 +31,15 @@
   <div class="controls">
     <label for="kmlUrl"><strong>KML URL:</strong></label>
     <input type="text" id="kmlUrl" value="./examples/ca_sno_parks/ca_sno_parks.kml">
-    <button id="loadKML">Add Layer</button>
+    <button id="loadKML">Add</button>
 
-    <label for="geoJsonUrl"><strong>Heatmap GeoJSON URL:</strong></label>
+    <label for="geoJsonUrl"><strong>GeoJSON URL:</strong></label>
     <input type="text" id="geoJsonUrl" value="./examples/ca_sno_parks/snodas_snow_depth_20261114.geojson">
-    <label for="heatmapIntensityPropertyName"><strong>Heatmap Intensity Property Name:</strong></label>
-    <input type="text" id="heatmapIntensityPropertyName" placeholder="depth_mm" value="depth_mm">    
-    <button id="loadGeoJSON">Add Layer</button>
+    <button id="loadGeoJSON">Add</button>
   </div>
   
   <div id="log"></div>
 
-  <script src="https://unpkg.com/geojson-vt@3.2.0/geojson-vt.js"></script>
   <script defer type="module" src="src/snowpack.js"></script>
   </body>
 </html>
