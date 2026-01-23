@@ -157,14 +157,14 @@
 
     try {
       log("Loading SNO-Parks...");
-      await loadKML("./ca_sno_parks.kml", {popup: 'name'});
+      await loadKML("./ca_sno_parks.kml", {popupProperty: 'name'});
       
       const date = "20260116";
       const snowFile = "./snodas_snow_depth_ca_nv_" + date + ".geojson";
       const metadataFile = "./metadata_" + date + ".json";
       
       log("Loading Snow Depth Data...");
-      await loadGeoJSON(snowFile, {color: 'c', popup: 'label'});
+      await loadGeoJSON(snowFile, {colorProperty: 'c', popupProperty: 'label'});
       
       const response = await fetch(metadataFile);
       if (response.ok) {
