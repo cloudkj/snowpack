@@ -57,7 +57,7 @@ export async function loadGeoJSON(url, propNames) {
         const properties = e.layer.properties;
         if (properties[popupPropertyName]) {
             L.popup()
-                .setContent(properties['label'])
+                .setContent(properties[popupPropertyName])
                 .setLatLng(e.latlng)
                 .openOn(map);
         }
@@ -82,4 +82,5 @@ export function initMap(containerId, options) {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+    return map;
 }
