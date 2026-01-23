@@ -18,7 +18,7 @@ export async function loadKML(url, propNames) {
     const kmlDom = parser.parseFromString(text, 'text/xml');
     const kmlData = togeojson.kml(kmlDom);
 
-    const popupPropertyName = propNames.popup;
+    const popupPropertyName = propNames.popupProperty;
     const layer = L.geoJSON(kmlData, {
         onEachFeature: function(f, l) {
             if (f.properties && f.properties[popupPropertyName]) {
@@ -38,16 +38,16 @@ export async function loadGeoJSON(url, propNames) {
     const response = await fetch(url);
     const data = await response.json();
 
-    const colorPropertyName = propNames.color;
-    const popupPropertyName = propNames.popup;
+    const colorPropertyName = propNames.colorProperty;
+    const popupPropertyName = propNames.popupProperty;
     geoJsonLayer = L.vectorGrid.slicer(data, {
         interactive: true,
         vectorTileLayerStyles: {
             sliced: function(properties, zoom) {
                 return {
-                    color: properties[colorPropertyName],
+                    color: properties[colorPropertyName] || propNames.color,
                     fill: true,
-                    fillColor: properties[colorPropertyName],
+                    fillColor: properties[colorPropertyName] || propNames.color,
                     fillOpacity: 0.7,
                     stroke: false
                 };
