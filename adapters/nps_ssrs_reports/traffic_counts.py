@@ -2,6 +2,9 @@ import json
 import time
 import sys
 import re
+import time
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -439,6 +442,12 @@ LOCATION_NAME_BLOCKLIST = [
     '(INFO ONLY)',
 ]
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type((TimeoutException, WebDriverException)),
+    before_sleep=lambda retry_state: print(f"Retrying {retry_state.fn.__name__} due to timeout...", file=sys.stderr)
+)
 def get_nps_traffic_data(park_code="YOSE"):
     # Configure Headless Chrome
     chrome_options = Options()
@@ -487,7 +496,6 @@ def get_nps_traffic_data(park_code="YOSE"):
                 location_name = location_name.strip()
 
                 coords = NPS_TRAFFIC_LOCATIONS[park_code][f"{park_name} {location_name}"]
-                coords = ",".join([str(coords["lat"]), str(coords["lng"])])
                 print(park_code, park_name, location_name, coords, file=sys.stderr)
                 continue
 
@@ -495,16 +503,22 @@ def get_nps_traffic_data(park_code="YOSE"):
             if len(cols) != 15: continue
             if location_name is None: continue
 
+            key = f"{park_name} {location_name}"
             year = cols[0].text.strip()
+
+            if key not in results[park_code]:
+                results[park_code][key] = {
+                    'lat': coords['lat'],
+                    'lng': coords['lng'],
+                    'counts': {},
+                }
             
-            if coords not in results[park_code]:
-                results[park_code][coords] = {}
             counts = []
             months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             for idx, month in enumerate(months):
                 count_raw = cols[idx + 1].text.replace(',', '').strip()
                 counts.append(int(count_raw) if count_raw.isdigit() else 0)
-            results[park_code][coords][year] = counts
+            results[park_code][key]['counts'][year] = counts
     finally:
         driver.quit()
     return results
