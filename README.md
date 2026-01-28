@@ -12,6 +12,9 @@ files.
 California SNO-Parks combined with current snow depth:
 [https://cloudkj.github.io/snowpack/examples/ca_sno_parks/](https://cloudkj.github.io/snowpack/examples/ca_sno_parks/)
 
+US national parks combined with seasonal visitor data:
+[https://cloudkj.github.io/snowpack/examples/nps_heatmap/](https://cloudkj.github.io/snowpack/examples/nps_heatmap/)
+
 ## Usage
 
 ```javascript
@@ -20,12 +23,21 @@ import { initMap, loadKML, loadGeoJSON } from './src/snowpack.js';
 initMap('map', { centerCoords: [39.5, -120.5], zoomLevel: 8 });
 
 const kmlUrl = ...;
-const kmlPropNames = { ... };
-await loadKML(kmlUrl, kmlPropNames);
+await loadKML(kmlUrl, {
+  popupProperty: '<property name for popup text>'
+});
 
 const geoJsonUrl = ...;
-const geoJsonPropNames = { ... };
-await loadGeoJSON(geoJsonUrl, geoJsonPropNames);
+await loadGeoJSON(geoJsonUrl, {
+  colorProperty: '<property name for feature color>',
+  popupProperty: '<property name for popup text>'
+});
+
+await loadHeatmap(geoJsonUrl, {
+  singleton: <true | false>, // display a single heatmap layer at a time
+  smooth: <true | false>,    // apply log-smoothing to intensity values
+  normalize: <true | false>  // normalize intensity values based on maximum value
+});
 ```
 
 ## Examples
