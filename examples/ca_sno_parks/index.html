@@ -159,9 +159,8 @@
       log("Loading SNO-Parks...");
       await loadKML("./ca_sno_parks.kml", {popupProperty: 'name'});
       
-      const date = "20260116";
-      const snowFile = "./snodas_snow_depth_ca_nv_" + date + ".geojson";
-      const metadataFile = "./metadata_" + date + ".json";
+      const snowFile = "./snodas_snow_depth_ca_nv_latest.geojson";
+      const metadataFile = "./metadata_latest.json";
       
       log("Loading Snow Depth Data...");
       await loadGeoJSON(snowFile, {colorProperty: 'c', popupProperty: 'label'});
