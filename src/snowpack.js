@@ -27,7 +27,7 @@ export async function loadKML(url, options) {
             }
         }
     }).addTo(map);
-    map.fitBounds(layer.getBounds());
+    map.fitBounds(kmlLayer.getBounds());
     return kmlLayer;
 }
 
