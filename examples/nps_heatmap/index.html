@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>US National Parks Seasonal Visitor Heatmap</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+      :root {
+        --primary-blue: #0288D1;
+        --nav-height: 56px;
+        --control-height: 70px;
+      }
+
+      body { 
+        font-family: -apple-system, system-ui, sans-serif;
+        margin: 0; padding: 0;
+        display: flex; flex-direction: column;
+        height: 100vh; background: #fff; overflow: hidden;
+      }
+
+      nav {
+        height: var(--nav-height);
+        background: var(--primary-blue);
+        color: white;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 16px; z-index: 2000; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+
+      /* Ensures title doesn't squash icons on narrow mobile screens */
+      nav h1 { 
+        font-size: 1rem; 
+        margin: 0; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        padding-right: 10px;
+      }
+
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+      }
+
+      .github-link {
+        color: white;
+        display: flex;
+        align-items: center;
+        transition: opacity 0.2s;
+      }
+
+      .github-link:hover { opacity: 0.7; }
+
+      #map { flex-grow: 1; width: 100%; z-index: 1; }
+
+      .map-controls {
+        height: var(--control-height);
+        background: #f8f9fa;
+        display: flex; align-items: center; justify-content: center;
+        padding: 0 15px; border-top: 1px solid #ddd; z-index: 2000;
+      }
+
+      select {
+        width: 100%; max-width: 300px;
+        padding: 12px; border-radius: 8px;
+        font-size: 16px; border: 1px solid #ccc;
+        background: white;
+      }
+
+      #message { 
+        position: absolute; top: calc(var(--nav-height) + 12px); left: 50%;
+        transform: translateX(-50%); background: rgba(0,0,0,0.8);
+        color: white; padding: 8px 16px; border-radius: 20px;
+        font-size: 0.85rem; z-index: 3000; display: none;
+      }
+      
+      #message:not(:empty) { display: block; }
+
+      /* Adjust for very small screens */
+      @media (max-width: 400px) {
+        #statusBadge { display: none; } /* Hide text badge on tiny screens to save space */
+      }
+    </style>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "leaflet": "https://esm.sh/leaflet@1.9.4",
+            "togeojson": "https://esm.sh/@mapbox/togeojson@0.16.0",
+            "geojson-vt": "https://esm.sh/geojson-vt@3.2.1",
+            "leaflet.vectorgrid": "https://esm.sh/leaflet.vectorgrid",
+            "leaflet-heat": "https://esm.sh/leaflet.heat"
+        }
+    }
+    </script>
+  </head>
+  <body>
+
+  <nav>
+    <h1>US National Parks Seasonal Visitor Heatmap</h1>
+    <div class="nav-right">
+      <a href="https://github.com/yourusername/your-repo" class="github-link" title="View on GitHub" target="_blank">
+        <svg height="24" width="24" viewBox="0 0 16 16" fill="white" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+        </svg>
+      </a>
+      <div id="statusBadge" style="font-size: 0.75rem; opacity: 0.9;">Data Thru 2025</div>
+    </div>
+  </nav>
+
+  <div id="message"></div>
+  <div id="map"></div>
+
+  <div class="map-controls">
+    <select id="monthSelector">
+      <option value="Jan">January</option>
+      <option value="Feb">February</option>
+      <option value="Mar">March</option>
+      <option value="Apr">April</option>
+      <option value="May">May</option>
+      <option value="Jun">June</option>
+      <option value="Jul">July</option>
+      <option value="Aug">August</option>
+      <option value="Sep">September</option>
+      <option value="Oct">October</option>
+      <option value="Nov">November</option>
+      <option value="Dec">December</option>
+    </select>
+  </div>
+
+  <script defer type="module">
+    import { initMap, loadGeoJSON, loadHeatmap } from '../../src/snowpack.js';
+    import L from 'leaflet';
+    import 'leaflet-heat';
+
+    let MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let heatLayer = null;
+
+    const message = document.getElementById('message');
+    const log = (s) => { message.innerText = s; if (s) setTimeout(() => message.innerText = '', 3000); };
+
+    const map = initMap('map', {
+        centerCoords: [37.8, -119.0],
+        zoomLevel: 8
+    });
+
+    async function updateHeatmap(month) {
+      const monthIndex = MONTHS.indexOf(month);
+      loadHeatmap('nps_traffic_counts_2025.geojson', function(feature) {
+        const sum = Object.values(feature.properties.counts).map(v => v[monthIndex]).reduce((a, b) => a + b);
+        return [feature.geometry.coordinates[0], feature.geometry.coordinates[1], sum];
+      }, {
+        singleton: true,
+        smooth: true,
+        normalize: true
+      });
+
+      log(`Showing Visitors for ${month}`);
+    }
+
+    document.getElementById('monthSelector').addEventListener('change', (e) => {
+      updateHeatmap(e.target.value);
+    });
+
+    log("Loading Visitor Data...");
+    setTimeout(() => {
+      updateHeatmap("Jul");
+      document.getElementById('monthSelector').value = "Jul";
+    }, 1000);
+
+   await loadGeoJSON('national_parks.geojson', {color: '#56903a'});
+
+  </script>
+  </body>
+</html>
