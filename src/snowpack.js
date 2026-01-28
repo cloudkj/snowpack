@@ -6,9 +6,10 @@ let renderer = L.canvas();
 let map;
 let kmlLayer = null;
 let geoJsonLayer = null;
+let heatmapLayer = null;
 
-export async function loadKML(url, propNames) {
-    if (kmlLayer) {
+export async function loadKML(url, options) {
+    if (options.singleton && kmlLayer) {
         map.removeLayer(kmlLayer);
     }
 
@@ -18,8 +19,8 @@ export async function loadKML(url, propNames) {
     const kmlDom = parser.parseFromString(text, 'text/xml');
     const kmlData = togeojson.kml(kmlDom);
 
-    const popupPropertyName = propNames.popupProperty;
-    const layer = L.geoJSON(kmlData, {
+    const popupPropertyName = options.popupProperty;
+    kmlLayer = L.geoJSON(kmlData, {
         onEachFeature: function(f, l) {
             if (f.properties && f.properties[popupPropertyName]) {
                 l.bindPopup(f.properties[popupPropertyName]);
@@ -27,27 +28,27 @@ export async function loadKML(url, propNames) {
         }
     }).addTo(map);
     map.fitBounds(layer.getBounds());
-    kmlLayer = layer;
+    return kmlLayer;
 }
 
-export async function loadGeoJSON(url, propNames) {
-    if (geoJsonLayer) {
+export async function loadGeoJSON(url, options) {
+    if (options.singleton && geoJsonLayer) {
         map.removeLayer(geoJsonLayer);
     }
 
     const response = await fetch(url);
     const data = await response.json();
 
-    const colorPropertyName = propNames.colorProperty;
-    const popupPropertyName = propNames.popupProperty;
+    const colorPropertyName = options.colorProperty;
+    const popupPropertyName = options.popupProperty;
     geoJsonLayer = L.vectorGrid.slicer(data, {
         interactive: true,
         vectorTileLayerStyles: {
             sliced: function(properties, zoom) {
                 return {
-                    color: properties[colorPropertyName] || propNames.color,
+                    color: properties[colorPropertyName] || options.color,
                     fill: true,
-                    fillColor: properties[colorPropertyName] || propNames.color,
+                    fillColor: properties[colorPropertyName] || options.color,
                     fillOpacity: 0.7,
                     stroke: false
                 };
@@ -62,6 +63,33 @@ export async function loadGeoJSON(url, propNames) {
                 .openOn(map);
         }
     }).addTo(map);
+    return geoJsonLayer;
+}
+
+export async function loadHeatmap(url, callback, options) {
+    if (options.singleton && heatmapLayer) {
+        map.removeLayer(heatmapLayer);
+    }
+
+    const response = await fetch(url);
+    const data = await response.json();
+    let points = data.features.map(callback);
+
+    // Normalize and/or smooth as needed
+    let denom = 1;
+    if (options.normalize) {
+        let maxVal = points.reduce((max, curr) => Math.max(max, curr[2]), 0);
+        denom = options.smooth ? Math.log(maxVal) : maxVal;
+    }
+    points = points.map(([lat, lng, count]) => {
+        let numer = options.smooth ? Math.log(count) : count;
+        return [lat, lng, options.normalize ? numer / denom : numer];
+    });
+
+    heatmapLayer = L.heatLayer(points, {
+        maxZoom: 8
+    }).addTo(map);
+    return heatmapLayer;
 }
 
 export function initMap(containerId, options) {
