@@ -455,7 +455,7 @@ def get_nps_traffic_data(park_code="YOSE"):
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
     url = f"https://irma.nps.gov/Stats/SSRSReports/Park%20Specific%20Reports/Traffic%20Counts?Park={park_code}"
-    results = {park_code: {}}
+    results = {}
 
     try:
         driver.get(url)
@@ -506,8 +506,8 @@ def get_nps_traffic_data(park_code="YOSE"):
             key = f"{park_name} {location_name}"
             year = cols[0].text.strip()
 
-            if key not in results[park_code]:
-                results[park_code][key] = {
+            if key not in results:
+                results[key] = {
                     'lat': coords['lat'],
                     'lng': coords['lng'],
                     'counts': {},
@@ -518,13 +518,28 @@ def get_nps_traffic_data(park_code="YOSE"):
             for idx, month in enumerate(months):
                 count_raw = cols[idx + 1].text.replace(',', '').strip()
                 counts.append(int(count_raw) if count_raw.isdigit() else 0)
-            results[park_code][key]['counts'][year] = counts
+            results[key]['counts'][year] = counts
     finally:
         driver.quit()
     return results
 
-data = {}
+data = {
+    'type': 'FeatureCollection',
+    'features': [],
+}
 for park_code, locations in list(NPS_TRAFFIC_LOCATIONS.items()):
-    data.update(get_nps_traffic_data(park_code))
+    results = get_nps_traffic_data(park_code)
+    data['features'].extend([{
+        'type': 'Feature',
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [vals['lat'], vals['lng']]
+        },
+        'properties': {
+            'park_code': park_code,
+            'location': key,
+            'counts': vals['counts']
+        }
+    } for key, vals in results.items()])
 
 print(json.dumps(data, indent=2))
