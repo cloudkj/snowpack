@@ -33,7 +33,13 @@ await loadGeoJSON(geoJsonUrl, {
   popupProperty: '<property name for popup text>'
 });
 
-await loadHeatmap(geoJsonUrl, {
+await loadHeatmap(geoJsonUrl,
+  // Callback to compute intensity value of each feature
+  function(feature) {
+    ...
+  },
+  // Options
+  {
   singleton: <true | false>, // display a single heatmap layer at a time
   smooth: <true | false>,    // apply log-smoothing to intensity values
   normalize: <true | false>  // normalize intensity values based on maximum value
